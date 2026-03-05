@@ -1,59 +1,51 @@
 import heapq
-import sys
 
-def rozwiazanie_dijkstra():
-    pierwsza_linia = input().split()
-    n = int(pierwsza_linia[0])
-    m = int(pierwsza_linia[1])
+print("""Przykladowe Dane:
+4 4
+1 2 1
+2 4 1
+1 3 5
+3 4 1
+1 4
+1""")
 
-    # Lista sąsiedztwa
-    graf = {i: [] for i in range(1, n + 1)}
+n,m = map(int ,input().split()) #wczytanie liczb wierzcholkow n i krawedzmi m
 
-    for _ in range(m):
-        krawedz = input().split()
-        u = int(krawedz[0])
-        v = int(krawedz[1])
-        waga = int(krawedz[2])
-        graf[u].append((v, waga))
+graf= [[] for _ in range(n+1)] #tworzymy pusty graf (l.wierzh)
 
-    przedostatnia = input().split()
-    start_v = int(przedostatnia[0])
-    koniec_u = int(przedostatnia[1])
+for _ in range(m):
+    p,k,waga = map(int ,input().split()) # wczytanie krawedzi (poczatek,koniec,waga)
+    graf[p].append((k,waga))
 
-    _ = input()
+x,y = map(int ,input().split())
+w= int(input())
 
-    odleglosci = {i: float('inf') for i in range(1, n + 1)}
-    poprzednicy = {i: None for i in range(1, n + 1)}
-    odleglosci[start_v] = 0
+def dijkstra(start):
+    odl = [float('inf')]*(n+1) #zalozenie ze na poczatku odleglosc jest nieskonczonosc wszedzie
+    pop = (n+1)*[-1] #zapisanie poprzednika w drodze (-1 dla braku poprzednika)
+    odl[start] = 0 #par. startowy
+    kol=[(0,start)] #kolejka prioretytowa (dys., wierzcholek)
 
-    kolejka = [(0, start_v)]
+    while kol:
+        ob_dys, obecny = heapq.heappop(kol) #pozyskanie najb. wierzcholka
 
-    while kolejka:
-        obecna_odleglosc, obecny_wierzcholek = heapq.heappop(kolejka)
-        if obecna_odleglosc > odleglosci[obecny_wierzcholek]:
+        if ob_dys > odl[obecny]: #sprawdzenie drogi
             continue
+        for sasiad, waga in graf[obecny]: #sprawdzenie wszystkich sasiadow wierzcholka
+            n_dys = ob_dys + waga
+            if n_dys < odl[sasiad]: #jesli znajdziemy nowa krotsza droge
+                odl[sasiad] = n_dys #zapamietanie nowej lepszej
+                pop[sasiad] = obecny #zapisanie poprzednika
+                heapq.heappush(kol,(n_dys,sasiad)) #wrzucenie sasiada do drogi
+    return odl, pop
 
-        for sasiad, waga in graf[obecny_wierzcholek]:
-            nowa_odleglosc = obecna_odleglosc + waga
+odl_x, pop_x = dijkstra(x) #uruchomienie funkcji z punktu x
+trasa=[] #pusta lista na trase
+ob_punkt=y #rozpoczecie z y
 
-            if nowa_odleglosc < odleglosci[sasiad]:
-                odleglosci[sasiad] = nowa_odleglosc
-                poprzednicy[sasiad] = obecny_wierzcholek
-                heapq.heappush(kolejka, (nowa_odleglosc, sasiad))
+while ob_punkt != -1: #wykonujemy dopoki nie bedzie poczatku (-1)
+    trasa.append(ob_punkt) #dodanie punktu do trasy
+    ob_punkt = pop_x[ob_punkt] #cofniecie sie do ostatniego punktu
+trasa.reverse() #odwracamy poniewaz zaczynalismy od y a nie od x
 
-    sciezka = []
-    aktualny = koniec_u
-
-    if odleglosci[koniec_u] != float('inf'):
-        while aktualny is not None:
-            sciezka.append(aktualny)
-            aktualny = poprzednicy[aktualny]
-        sciezka.reverse()
-
-        print(f"{odleglosci[koniec_u]} " + " ".join(map(str, sciezka)))
-    else:
-        print("Brak drogi")
-
-
-if __name__ == "__main__":
-    rozwiazanie_dijkstra()
+print(f"Wynik: Calk.dystans={odl_x[y]}, punkty w trasie: {' '.join(map(str, trasa))}") #wypisanie calk. dystansu oraz kolejne punkty w trasie
